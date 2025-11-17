@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMFITNESS - Plano de Treino Personalizado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">💪</span>
+                <span class="logo-text-white">SM</span><span class="logo-text-green">FITNESS</span>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="stage-indicator" id="stageIndicator"></div>
+
+        <!-- HOME SECTION -->
+        <div class="section active home-section" id="homeSection">
+            <div class="home-title">Bem-vindo ao SMFITNESS</div>
+            <div class="home-description">
+                Crie um plano de treino personalizado baseado em suas medidas corporais e características individuais. 
+                Utilizamos inteligência artificial para gerar o treino perfeito para você!
+            </div>
+            <button class="btn-primary btn-start" onclick="startQuiz()">Começar Agora</button>
+        </div>
+
+        <!-- STAGE 1: DADOS PESSOAIS -->
+        <div class="section" id="stage1">
+            <h2 style="margin-bottom: 20px;">Dados Pessoais</h2>
+            <div class="error-message" id="error1"></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="altura">Altura (cm)</label>
+                    <input type="number" id="altura" placeholder="Ex: 175" min="100" max="220">
+                </div>
+                <div class="form-group">
+                    <label for="peso">Peso (kg)</label>
+                    <input type="number" id="peso" placeholder="Ex: 75" min="30" max="300">
+                </div>
+            </div>
+            <div class="imc-result" id="imcResult" style="display: none;">
+                <div class="imc-value" id="imcValue"></div>
+                <div class="imc-classification" id="imcClass"></div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="goHome()">Voltar</button>
+                <button class="btn-primary" onclick="nextStage(1)">Próximo</button>
+            </div>
+        </div>
+
+        <!-- STAGE 2: MEDIDAS CORPORAIS -->
+        <div class="section" id="stage2">
+            <h2 style="margin-bottom: 20px;">Medidas Corporais (cm)</h2>
+            <div class="error-message" id="error2"></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="biceps">
+                        <span class="label-icon">💪</span> Bíceps
+                    </label>
+                    <input type="number" id="biceps" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="antebraco">
+                        <span class="label-icon">🤚</span> Antebraço
+                    </label>
+                    <input type="number" id="antebraco" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="peitoral">
+                        <span class="label-icon">🛡️</span> Peitoral
+                    </label>
+                    <input type="number" id="peitoral" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="cintura">
+                        <span class="label-icon">⭕</span> Cintura
+                    </label>
+                    <input type="number" id="cintura" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="ombro">
+                        <span class="label-icon">💪</span> Ombro
+                    </label>
+                    <input type="number" id="ombro" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="quadriceps">
+                        <span class="label-icon">🦵</span> Quadríceps
+                    </label>
+                    <input type="number" id="quadriceps" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="coxa">
+                        <span class="label-icon">🦵</span> Coxa
+                    </label>
+                    <input type="number" id="coxa" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="panturrilha">
+                        <span class="label-icon">🦿</span> Panturrilha
+                    </label>
+                    <input type="number" id="panturrilha" placeholder="0" step="0.1" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="gluteos">
+                        <span class="label-icon">🍑</span> Glúteos
+                    </label>
+                    <input type="number" id="gluteos" placeholder="0" step="0.1" min="0">
+                </div>
+            </div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="previousStage(2)">Voltar</button>
+                <button class="btn-primary" onclick="nextStage(2)">Próximo</button>
+            </div>
+        </div>
+
+        <!-- STAGE 3: PERFIL DO USUÁRIO -->
+        <div class="section" id="stage3">
+            <h2 style="margin-bottom: 20px;">Seu Perfil</h2>
+            <div class="error-message" id="error3"></div>
+            
+            <div class="form-group">
+                <label>Nível de Experiência</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="exp1" name="experiencia" value="Iniciante">
+                        <label for="exp1">Iniciante</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="exp2" name="experiencia" value="Intermediário">
+                        <label for="exp2">Intermediário</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="exp3" name="experiencia" value="Avançado">
+                        <label for="exp3">Avançado</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Sexo</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="sex1" name="sexo" value="Masculino">
+                        <label for="sex1">Masculino</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="sex2" name="sexo" value="Feminino">
+                        <label for="sex2">Feminino</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Local de Treino</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="local1" name="local" value="Academia">
+                        <label for="local1">Academia</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="local2" name="local" value="Casa">
+                        <label for="local2">Casa</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="previousStage(3)">Voltar</button>
+                <button class="btn-primary" onclick="generateWorkout()">Gerar Treino</button>
+            </div>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="section" id="resultSection">
+            <h2 style="margin-bottom: 20px;">Seu Plano de Treino 5 Dias</h2>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Gerando seu treino personalizado com IA...</p>
+            </div>
+            <div class="workout-container" id="workoutContainer"></div>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="goHome()">Novo Treino</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
