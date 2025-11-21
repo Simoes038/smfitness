@@ -1,7 +1,7 @@
 // ============================================
 // CONFIGURAÇÃO DO TOKEN GROQ
 // ============================================
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = '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';
 
 // ============================================
 // OBJETO DE DADOS DO USUÁRIO
@@ -24,16 +24,14 @@ const userData = {
     experiencia: null,
     sexo: null,
     local: null,
+    diasPorSemana: null,
+    objetivo: null,
     treino: null
 };
 
 // ============================================
 // FUNÇÕES DE NAVEGAÇÃO
 // ============================================
-
-/**
- * Atualiza a barra de progresso e indicador de etapa
- */
 function updateProgress(stage) {
     const percentages = [0, 25, 50, 75, 100];
     const idx = Math.max(0, Math.min(stage, percentages.length - 1));
@@ -46,26 +44,17 @@ function updateProgress(stage) {
     if (stageIndicator) stageIndicator.textContent = stages[stage] || '';
 }
 
-/**
- * Exibe a seção desejada
- */
 function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
     const target = document.getElementById(sectionId);
     if (target) target.classList.add('active');
 }
 
-/**
- * Inicia o questionário
- */
 function startQuiz() {
     showSection('stage1');
     updateProgress(1);
 }
 
-/**
- * Volta para home e reseta dados
- */
 function goHome() {
     userData.altura = null;
     userData.peso = null;
@@ -84,22 +73,28 @@ function goHome() {
     userData.experiencia = null;
     userData.sexo = null;
     userData.local = null;
+    userData.diasPorSemana = null;
+    userData.objetivo = null;
     userData.treino = null;
     
     document.querySelectorAll('input[type="number"]').forEach(el => el.value = '');
     document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
-    
+    const sel = document.getElementById('diasSemana');
+    if (sel) sel.value = '';
+
     showSection('homeSection');
     updateProgress(0);
+
+    // limpar resultado também
+    const container = document.getElementById('workoutContainer');
+    if (container) container.innerHTML = '';
+    const resultTitle = document.getElementById('resultTitle');
+    if (resultTitle) resultTitle.textContent = 'Seu Plano de Treino';
 }
 
 // ============================================
 // FUNÇÕES DE CÁLCULO
 // ============================================
-
-/**
- * Calcula o IMC do usuário
- */
 function calculateIMC() {
     const alturaEl = document.getElementById('altura');
     const pesoEl = document.getElementById('peso');
@@ -107,7 +102,7 @@ function calculateIMC() {
     const peso = parseFloat(pesoEl?.value);
 
     if (altura > 0 && peso > 0) {
-        const imc = (peso / (altura / 100) ** 2).toFixed(1);
+        const imc = +(peso / (altura / 100) ** 2).toFixed(1);
         userData.imc = imc;
 
         let classification = '';
@@ -126,7 +121,6 @@ function calculateIMC() {
     }
 }
 
-// Event listeners para cálculo de IMC
 document.addEventListener('DOMContentLoaded', function() {
     const alturaInput = document.getElementById('altura');
     const pesoInput = document.getElementById('peso');
@@ -138,10 +132,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ============================================
 // FUNÇÕES DE VALIDAÇÃO
 // ============================================
-
-/**
- * Exibe mensagem de erro
- */
 function showError(stageNum, message) {
     const errorEl = document.getElementById(`error${stageNum}`);
     if (!errorEl) return;
@@ -154,20 +144,13 @@ function showError(stageNum, message) {
     }
 }
 
-/**
- * Obtém valor selecionado de radio button
- */
 function getSelectedValue(name) {
     return document.querySelector(`input[name="${name}"]:checked`)?.value || null;
 }
 
 // ============================================
-// FUNÇÕES DE NAVEGAÇÃO ENTRE ETAPAS
+// NAVEGAÇÃO ENTRE ETAPAS
 // ============================================
-
-/**
- * Avança para a próxima etapa
- */
 function nextStage(currentStage) {
     if (currentStage === 1) {
         const altura = document.getElementById('altura')?.value;
@@ -201,9 +184,6 @@ function nextStage(currentStage) {
     }
 }
 
-/**
- * Volta para a etapa anterior
- */
 function previousStage(currentStage) {
     if (currentStage === 2) {
         showSection('stage1');
@@ -218,25 +198,30 @@ function previousStage(currentStage) {
 }
 
 // ============================================
-// FUNÇÕES DE GERAÇÃO DE TREINO COM IA (GROQ)
+// GERAÇÃO DO TREINO COM IA (GROQ)
 // ============================================
-
-/**
- * Gera o treino usando IA da Groq
- */
 async function generateWorkout() {
     userData.experiencia = getSelectedValue('experiencia');
     userData.sexo = getSelectedValue('sexo');
     userData.local = getSelectedValue('local');
 
-    if (!userData.experiencia || !userData.sexo || !userData.local) {
-        showError(3, '⚠️ Por favor, selecione todas as opções!');
+    const diasSel = document.getElementById('diasSemana')?.value;
+    userData.diasPorSemana = diasSel ? parseInt(diasSel, 10) : null;
+    userData.objetivo = getSelectedValue('objetivo');
+
+    if (!userData.experiencia || !userData.sexo || !userData.local || !userData.diasPorSemana || !userData.objetivo) {
+        showError(3, '⚠️ Por favor, selecione todas as opções (experiência, sexo, local, dias por semana e objetivo)!');
         return;
     }
 
     showError(3, '');
     showSection('resultSection');
     updateProgress(4);
+
+    const resultTitle = document.getElementById('resultTitle');
+    if (resultTitle) {
+        resultTitle.textContent = `Seu Plano de Treino - ${userData.diasPorSemana} dia(s) • ${userData.objetivo}`;
+    }
 
     const loadingEl = document.getElementById('loading');
     const container = document.getElementById('workoutContainer');
@@ -324,11 +309,11 @@ async function generateWorkout() {
 }
 
 // ============================================
-// PROMPT DA IA
+// PROMPT DA IA (ATUALIZADO PARA "Dia 1...Dia N")
 // ============================================
-
 function construirPrompt() {
-    return `Você é um especialista em treinamento físico e nutrição. Crie um plano de treino de 5 dias totalmente personalizado baseado nos dados abaixo:
+    const dias = userData.diasPorSemana || 5;
+    return `Você é um especialista em treinamento físico e nutrição. Crie um plano de treino de ${dias} dias totalmente personalizado baseado nos dados abaixo:
 
 DADOS PESSOAIS:
 - Altura: ${userData.altura}cm
@@ -350,51 +335,41 @@ PERFIL DO USUÁRIO:
 - Nível de Experiência: ${userData.experiencia}
 - Sexo: ${userData.sexo}
 - Local de Treino: ${userData.local}
+- Dias por semana: ${userData.diasPorSemana}
+- Objetivo: ${userData.objetivo}
 
-INSTRUÇÕES:
-Gere um treino detalhado com 5 dias (Segunda-feira a Sexta-feira). Para CADA dia forneça:
-1. Nome do dia da semana
-2. Foco principal do treino
-3. Lista de 5-7 exercícios com:
-   - Nome do exercício
-   - Séries x repetições
-   - Tempo de descanso
-4. Tempo total estimado do treino
-5. Uma dica importante
-
-Adapte os exercícios:
-- Ao nível de experiência (iniciante/intermediário/avançado)
-- Ao local de treino (academia/casa)
-- Às medidas corporais do usuário
+INSTRUÇÕES IMPORTANTES:
+- GERE os dias **como "Dia 1", "Dia 2", ..., "Dia ${dias}"**. **NÃO** use nomes de dias da semana (Segunda, Terça, etc).
+- Cada dia deve começar em sua própria linha com o título: "Dia X" (por exemplo: Dia 1).
+- Para CADA dia forneça:
+  1) Foco principal do treino
+  2) Lista de 4 a 7 exercícios com: Nome do exercício - Séries x Repetições (ou tempo) - Tempo de descanso
+  3) Tempo total estimado do treino
+  4) Uma dica prática e curta
+- Adapte os exercícios ao nível de experiência (Iniciante/Intermediário/Avançado), ao local de treino (Academia/Casa), ao objetivo do usuário e às medidas corporais fornecidas.
+- Use linguagem clara e objetiva em português.
 
 FORMATO DE RESPOSTA (USE EXATAMENTE ESTE FORMATO):
-
-SEGUNDA-FEIRA
+Dia 1
 Foco: [foco do treino]
 1. [Nome do exercício] - [séries] x [repetições] - [descanso]
-2. [Nome do exercício] - [séries] x [repetições] - [descanso]
-3. [Nome do exercício] - [séries] x [repetições] - [descanso]
-4. [Nome do exercício] - [séries] x [repetições] - [descanso]
-5. [Nome do exercício] - [séries] x [repetições] - [descanso]
+2. ...
 Tempo: [tempo total]
-Dica: [dica importante]
+Dica: [dica curta]
 
-TERÇA-FEIRA
-Foco: [foco do treino]
+Dia 2
+Foco: [...]
 ...
-
-Continue para os 5 dias da semana.`;
+Continue até o Dia ${dias}.`;
 }
 
 // ============================================
-// EXIBE O TREINO GERADO (VERSÃO MELHORADA)
+// EXIBE O TREINO GERADO (VERSÃO ATUALIZADA PARA "Dia 1...")
 // ============================================
-
 function displayWorkout(workoutText) {
     const container = document.getElementById('workoutContainer');
     if (!container) return;
 
-    // Limpar container
     container.innerHTML = '';
 
     // LIMPEZA DO TEXTO DA API
@@ -405,48 +380,50 @@ function displayWorkout(workoutText) {
         .replace(/^\s*[-•]\s/gm, '')    // Remove bullets
         .trim();
 
-    // Definição dos dias com emojis
-    const diasConfig = [
-        { nome: '🏋️ SEGUNDA-FEIRA', emoji: '💪', regex: /segunda[-\s]?feira/gi },
-        { nome: '🔥 TERÇA-FEIRA', emoji: '🏃', regex: /terça[-\s]?feira/gi },
-        { nome: '💪 QUARTA-FEIRA', emoji: '🔥', regex: /quarta[-\s]?feira/gi },
-        { nome: '⚡ QUINTA-FEIRA', emoji: '💯', regex: /quinta[-\s]?feira/gi },
-        { nome: '🎯 SEXTA-FEIRA', emoji: '⚡', regex: /sexta[-\s]?feira/gi }
-    ];
+    // Normalizar quebras e remover múltiplas linhas vazias
+    cleanedText = cleanedText.replace(/\r/g, '').replace(/\n{2,}/g, '\n\n');
 
-    // Dividir texto por dias
-    const lines = cleanedText.split('\n').filter(line => line.trim());
+    // Gerar configuração dinâmica de dias com regex que detecta "Dia X" (i de 1..N)
+    const totalDias = userData.diasPorSemana || 5;
+    const diasConfig = Array.from({ length: totalDias }, (_, i) => ({
+        nome: `📅 DIA ${i + 1}`,
+        regex: new RegExp(`\\bdia\\s*${i + 1}\\b`, 'i') // detecta "Dia 1", "dia1", "DIA 1"
+    }));
+
+    // Dividir por linhas e localizar títulos "Dia X"
+    const lines = cleanedText.split('\n');
     let currentDayIndex = -1;
     let currentDayContent = [];
     const diasData = [];
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        
-        // Verificar se a linha é um dia da semana
-        let isDayHeader = false;
-        let matchedDayIndex = -1;
-        
-        diasConfig.forEach((diaConfig, idx) => {
-            if (diaConfig.regex.test(line)) {
-                isDayHeader = true;
-                matchedDayIndex = idx;
-            }
-        });
+        if (!line) continue;
 
-        if (isDayHeader && matchedDayIndex >= 0) {
-            // Salvar dia anterior se existir
+        // detectar se linha contém "Dia X"
+        let matchedDay = -1;
+        for (let j = 0; j < diasConfig.length; j++) {
+            if (diasConfig[j].regex.test(line)) {
+                matchedDay = j;
+                break;
+            }
+        }
+
+        if (matchedDay >= 0) {
+            // salvar dia anterior
             if (currentDayIndex >= 0 && currentDayContent.length > 0) {
                 diasData.push({
-                    config: diasConfig[currentDayIndex],
+                    index: currentDayIndex,
                     content: currentDayContent.join('\n')
                 });
             }
-            
-            // Iniciar novo dia
-            currentDayIndex = matchedDayIndex;
+            currentDayIndex = matchedDay;
             currentDayContent = [];
-        } else if (currentDayIndex >= 0 && line) {
+
+            // se a linha tiver mais conteúdo depois do título (ex: "Dia 1 - Foco: Peito"), usar o restante
+            const after = line.replace(diasConfig[matchedDay].regex, '').replace(/^[-:—\s]+/, '').trim();
+            if (after) currentDayContent.push(after);
+        } else if (currentDayIndex >= 0) {
             currentDayContent.push(line);
         }
     }
@@ -454,57 +431,73 @@ function displayWorkout(workoutText) {
     // Salvar último dia
     if (currentDayIndex >= 0 && currentDayContent.length > 0) {
         diasData.push({
-            config: diasConfig[currentDayIndex],
+            index: currentDayIndex,
             content: currentDayContent.join('\n')
         });
     }
 
-    // Renderizar dias encontrados
-    if (diasData.length > 0) {
-        diasData.forEach(dia => {
-            const daySection = document.createElement('div');
-            daySection.className = 'day-section';
-            
-            const dayTitle = document.createElement('div');
-            dayTitle.className = 'day-title';
-            dayTitle.textContent = dia.config.nome;
-            daySection.appendChild(dayTitle);
-
-            // Processar conteúdo do dia
-            const contentLines = dia.content.split('\n').filter(l => l.trim());
-            contentLines.forEach(contentLine => {
-                const exerciseItem = document.createElement('div');
-                exerciseItem.className = 'exercise-item';
-                
-                // Destaca números de séries e repetições
-                let formattedLine = contentLine
-                    .replace(/(\d+\s*x\s*\d+)/gi, '<strong style="color: #00ff88;">$1</strong>')
-                    .replace(/(\d+\s*seg|\d+\s*min)/gi, '<strong style="color: #00d9ff;">$1</strong>');
-                
-                exerciseItem.innerHTML = formattedLine;
-                daySection.appendChild(exerciseItem);
+    // Se não encontrou nenhum "Dia X", tentar dividir heurísticamente por blocos (fallback)
+    if (diasData.length === 0) {
+        // procurar padrões como "Foco:" ou "Tempo:" que se repetem e dividir em N blocos aproximados
+        const blocks = cleanedText.split(/\n(?=Foco:|\d+\.\s)/i).filter(b => b.trim());
+        if (blocks.length > 1) {
+            blocks.forEach((b, idx) => {
+                if (idx < totalDias) {
+                    diasData.push({ index: idx, content: b.trim() });
+                }
             });
-
-            container.appendChild(daySection);
-        });
-    } else {
-        // Fallback: exibir texto completo formatado
-        const fullTextDiv = document.createElement('div');
-        fullTextDiv.className = 'exercise-item';
-        fullTextDiv.style.whiteSpace = 'pre-wrap';
-        fullTextDiv.style.lineHeight = '1.8';
-        fullTextDiv.textContent = cleanedText;
-        container.appendChild(fullTextDiv);
+        } else {
+            // fallback final: mostrar todo o texto
+            const fullTextDiv = document.createElement('div');
+            fullTextDiv.className = 'exercise-item';
+            fullTextDiv.style.whiteSpace = 'pre-wrap';
+            fullTextDiv.style.lineHeight = '1.8';
+            fullTextDiv.textContent = cleanedText;
+            container.appendChild(fullTextDiv);
+            return;
+        }
     }
+
+    // Renderizar dias encontrados (ordenar por index)
+    diasData.sort((a, b) => a.index - b.index);
+    diasData.forEach(dia => {
+        const daySection = document.createElement('div');
+        daySection.className = 'day-section';
+        daySection.style.marginBottom = '18px';
+        daySection.style.padding = '14px';
+        daySection.style.borderRadius = '10px';
+        daySection.style.background = '#0f172a10';
+
+        const dayTitle = document.createElement('div');
+        dayTitle.className = 'day-title';
+        dayTitle.style.fontWeight = '700';
+        dayTitle.style.marginBottom = '10px';
+        dayTitle.textContent = `📅 Dia ${dia.index + 1}`;
+        daySection.appendChild(dayTitle);
+
+        const contentLines = dia.content.split('\n').filter(l => l.trim());
+        contentLines.forEach(contentLine => {
+            const exerciseItem = document.createElement('div');
+            exerciseItem.className = 'exercise-item';
+            exerciseItem.style.marginBottom = '8px';
+            exerciseItem.style.whiteSpace = 'pre-wrap';
+            
+            // Destaca séries x repetições e tempos (simples)
+            let formattedLine = escapeHtml(contentLine)
+                .replace(/(\d+\s*x\s*\d+)/gi, '<strong>$1</strong>')
+                .replace(/(\d+\s*rep(?:etições)?|\d+\s*reps?|\d+\s*seg(?:undos)?|\d+\s*min(?:utos)?)/gi, '<strong>$1</strong>');
+            
+            exerciseItem.innerHTML = formattedLine;
+            daySection.appendChild(exerciseItem);
+        });
+
+        container.appendChild(daySection);
+    });
 }
 
 // ============================================
 // HELPERS
 // ============================================
-
-/**
- * Escapa HTML para evitar injeção
- */
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
     return String(unsafe)
