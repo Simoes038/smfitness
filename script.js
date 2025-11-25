@@ -1,7 +1,7 @@
 // ============================================
 // CONFIGURAÇÃO DO TOKEN GROQ
 // ============================================
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = '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';
 
 // ============================================
 // OBJETO DE DADOS DO USUÁRIO
@@ -507,3 +507,4 @@ function escapeHtml(unsafe) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
